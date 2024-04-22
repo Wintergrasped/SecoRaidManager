@@ -33,6 +33,11 @@ public class EldritchGuardianBossFight implements Listener {
     private int phase = 0;
 
     // Configurable variables
+    
+    private static final String NAME = "Eldritch Guardian";
+    
+    private static final EntityType BOSS_TYPE = EntityType.WITHER_SKELETON;
+    
     private static final double INITIAL_HEALTH = 1000;
     private static final double INITIAL_DAMAGE = 4500;
     private static final double INITIAL_ARMOR = 5800;
@@ -69,8 +74,8 @@ public class EldritchGuardianBossFight implements Listener {
     }
 
     public void summonBoss(Location location) {
-        boss = (LivingEntity) location.getWorld().spawnEntity(location, EntityType.WITHER_SKELETON);
-        boss.setCustomName("Eldritch Guardian");
+        boss = (LivingEntity) location.getWorld().spawnEntity(location, BOSS_TYPE);
+        boss.setCustomName(NAME);
         boss.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(INITIAL_HEALTH);
 		boss.setHealth(INITIAL_HEALTH);
         boss.setRemoveWhenFarAway(false);
