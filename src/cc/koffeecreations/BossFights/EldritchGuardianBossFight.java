@@ -22,21 +22,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-
-import cc.koffeecreations.Loot.LootManager;
-
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class EldritchGuardianBossFight implements Listener {
     private JavaPlugin plugin;
     private LivingEntity boss;
+    private LivingEntity clone;
     private boolean inCombat = false;
     private int phase = 0;
 
     // Configurable variables
     private static final double INITIAL_HEALTH = 1000;
-    private static final double INITIAL_DAMAGE = 1500;
+    private static final double INITIAL_DAMAGE = 4500;
     private static final double INITIAL_ARMOR = 5800;
     private static final double INITIAL_ARMOR_TOUGHNESS = 6210;
     
@@ -47,7 +45,8 @@ public class EldritchGuardianBossFight implements Listener {
     private static final int REGENERATION_DURATION = 6000;
     private static final int REGENERATION_LEVEL = 1;
     
-    private static final int DAMAGE_REDUCTION_LEVEL = 90;
+    private static final int DAMAGE_REDUCTION_LEVEL = 80;
+    private static final int CLONE_DAMAGE_REDUCTION_LEVEL = 70;
     
     private static final int SHADOW_CLONE_COUNT = 6;
     private static final int SHADOW_CLONE_HEALTH = 50;
@@ -79,6 +78,7 @@ public class EldritchGuardianBossFight implements Listener {
         boss.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(40);
         boss.getAttribute(Attribute.GENERIC_ARMOR).setBaseValue(40);
         boss.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS).setBaseValue(40);
+        
         
         AttributeModifier dmgMod = new AttributeModifier(boss.getUniqueId(), "generic.attackDamage", INITIAL_DAMAGE, AttributeModifier.Operation.ADD_NUMBER);
         AttributeModifier armMod = new AttributeModifier(boss.getUniqueId(), "generic.armor", INITIAL_ARMOR, AttributeModifier.Operation.ADD_NUMBER);
@@ -158,7 +158,7 @@ public class EldritchGuardianBossFight implements Listener {
 
     private void spawnShadowClones(Location location, int count) {
         for (int i = 0; i < count; i++) {
-            LivingEntity clone = (LivingEntity) location.getWorld().spawnEntity(location, EntityType.WITHER_SKELETON);
+            clone = (LivingEntity) location.getWorld().spawnEntity(location, EntityType.WITHER_SKELETON);
             clone.setCustomName("Shadow Clone");
             clone.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(SHADOW_CLONE_HEALTH);
     		clone.setHealth(SHADOW_CLONE_HEALTH);
@@ -254,12 +254,23 @@ public class EldritchGuardianBossFight implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
     	
     	
-    	
-        if (event.getEntity().equals(boss)) {
-        	double red = 100-DAMAGE_REDUCTION_LEVEL;
+    	if (adds.contains(event.getEntity())) {
+    		double red = 100-CLONE_DAMAGE_REDUCTION_LEVEL;
         	red = red/100;
         	
         	event.setDamage((event.getDamage()*red));
+    	}else
+        if (event.getEntity().equals(boss)) {
+        	double red = 100-DAMAGE_REDUCTION_LEVEL;
+        	red = red/100;
+        	double nd = (event.getDamage()*red);
+        	
+        	if (nd <= 1) {
+        		nd = 1;
+        	}
+        	
+        	event.setDamage(nd);
+        	
             if (event.getDamage() >= (INITIAL_HEALTH*0.21)) {
             	event.setDamage((INITIAL_HEALTH*0.08));
             }
@@ -274,10 +285,6 @@ public class EldritchGuardianBossFight implements Listener {
             Bukkit.broadcastMessage("The Eldritch Guardian has been defeated!");
             event.getDrops().clear(); // Clear default drops
             event.getDrops().add(new ItemStack(Material.DIAMOND, 20)); // Custom drops
-            event.getDrops().add(new LootManager().getRandomBossDrop());
-            event.getDrops().add(new LootManager().getRandomBossDrop());
-            event.getDrops().add(new LootManager().getRandomBossDrop());
-            event.getDrops().add(new LootManager().getRandomBossDrop());
         }
     }
 }
